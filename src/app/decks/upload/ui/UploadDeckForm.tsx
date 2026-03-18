@@ -22,6 +22,17 @@ export default function UploadDeckForm({ userId }: { userId: string }) {
     if (!name) return setError("Deck name is required.");
 
     startTransition(async () => {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError) return setError(userError.message);
+      if (!user) {
+        setError("You’re not signed in. Please sign in again.");
+        window.location.href = "/login";
+        return;
+      }
+
       let storage_path: string;
 
       if (mode === "archidekt") {
@@ -54,7 +65,7 @@ export default function UploadDeckForm({ userId }: { userId: string }) {
             : file.type && file.type !== "application/octet-stream"
               ? file.type
               : "text/plain";
-        const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+        const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
 
         const { error: uploadError } = await supabase.storage
           .from("decklists")
@@ -67,7 +78,7 @@ export default function UploadDeckForm({ userId }: { userId: string }) {
       }
 
       const { error: insertError } = await supabase.from("decks").insert({
-        owner_id: userId,
+        owner_id: user.id,
         name,
         format: format || "Commander",
         storage_path,
