@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import UserMenu from "@/app/_components/UserMenu";
+import AdminLink from "@/app/_components/AdminLink";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,12 +45,7 @@ export default function RootLayout({
               >
                 Link deck
               </a>
-              <a
-                href="/admin/decks"
-                className="hidden rounded-full border border-black/10 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-950 hover:bg-zinc-50 dark:border-white/15 dark:bg-zinc-950 dark:text-zinc-50 dark:hover:bg-zinc-900 sm:inline-flex"
-              >
-                Admin
-              </a>
+              <AdminLink />
               <UserMenu />
             </div>
           </div>
