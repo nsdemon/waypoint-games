@@ -37,7 +37,7 @@ export default function ReportForm({
     const unique = new Set(playerIds);
 
     if (!storeId) return setError("Pick a store.");
-    if (!playedAt) return setError("Pick a date/time.");
+    if (!playedAt) return setError("Pick a date.");
     if (playerIds.length < 2) return setError("Add at least 2 players.");
     if (unique.size !== playerIds.length)
       return setError("Players must be unique.");
@@ -49,7 +49,9 @@ export default function ReportForm({
         .from("matches")
         .insert({
           store_id: storeId,
-          played_at: new Date(playedAt).toISOString(),
+          // `playedAt` is YYYY-MM-DD from an `<input type="date" />`.
+          // Store as ISO by defaulting to local midnight.
+          played_at: new Date(`${playedAt}T00:00:00`).toISOString(),
           created_by: currentUserId,
           notes: notes || null,
         })
@@ -104,10 +106,10 @@ export default function ReportForm({
         </label>
 
         <label className="grid gap-1">
-          <span className="text-sm font-medium">Date & time</span>
+          <span className="text-sm font-medium">Date</span>
           <input
             name="playedAt"
-            type="datetime-local"
+            type="date"
             required
             className="h-11 rounded-xl border border-black/10 bg-white px-3 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:bg-black"
           />
