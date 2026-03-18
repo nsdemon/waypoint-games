@@ -4,9 +4,12 @@ import { useMemo, useState, useTransition } from "react";
 import { z } from "zod";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-const schema = z.object({
+const signInSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
+});
+
+const signUpSchema = signInSchema.extend({
   displayName: z.string().min(2).max(40),
 });
 
@@ -29,7 +32,10 @@ export default function AuthForm() {
       displayName: String(formData.get("displayName") ?? ""),
     };
 
-    const parsed = schema.safeParse(raw);
+    const parsed =
+      mode === "signin"
+        ? signInSchema.safeParse(raw)
+        : signUpSchema.safeParse(raw);
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? "Invalid form input.");
       return;
@@ -53,7 +59,10 @@ export default function AuthForm() {
         email: parsed.data.email,
         password: parsed.data.password,
         options: {
-          data: { display_name: parsed.data.displayName },
+          data: {
+            display_name:
+              "displayName" in parsed.data ? parsed.data.displayName : "",
+          },
         },
       });
       if (signUpError) {
