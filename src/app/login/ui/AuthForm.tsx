@@ -21,6 +21,7 @@ export default function AuthForm() {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [emailDraft, setEmailDraft] = useState("");
 
   function onSubmit(formData: FormData) {
     setError(null);
@@ -116,6 +117,8 @@ export default function AuthForm() {
             name="email"
             type="email"
             required
+            value={emailDraft}
+            onChange={(e) => setEmailDraft(e.target.value)}
             className="h-11 rounded-xl border border-black/10 bg-white px-3 text-sm outline-none ring-0 focus:border-black/20 dark:border-white/15 dark:bg-black"
             placeholder="you@example.com"
             autoComplete="email"
@@ -157,6 +160,36 @@ export default function AuthForm() {
           {pending ? "Working..." : mode === "signin" ? "Sign in" : "Create account"}
         </button>
       </form>
+
+      {mode === "signin" ? (
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => {
+            setError(null);
+            setMessage(null);
+            const email = emailDraft.trim();
+            if (!email) {
+              setError("Enter your email first, then click reset password.");
+              return;
+            }
+            startTransition(async () => {
+              const { error: resetError } =
+                await supabase.auth.resetPasswordForEmail(email, {
+                  redirectTo: `${window.location.origin}/reset-password`,
+                });
+              if (resetError) {
+                setError(resetError.message);
+                return;
+              }
+              setMessage("Password reset email sent. Check your inbox.");
+            });
+          }}
+          className="mt-3 text-left text-sm font-medium text-zinc-700 underline underline-offset-4 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-white"
+        >
+          Forgot password?
+        </button>
+      ) : null}
 
       {error ? (
         <div className="mt-3 rounded-xl border border-red-500/20 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-500/25 dark:bg-red-950/40 dark:text-red-200">
