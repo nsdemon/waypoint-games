@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Deck = {
@@ -29,12 +29,46 @@ export default function ReviewDecks({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [localDecks, setLocalDecks] = useState<Deck[]>(decks);
+  const [toast, setToast] = useState<string | null>(null);
 
   const ownerName = useMemo(() => {
     const map = new Map<string, string>();
     owners.forEach((o) => map.set(o.id, o.display_name));
     return map;
   }, [owners]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin-decks-inserts")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "decks",
+          filter: "status=eq.pending",
+        },
+        (payload) => {
+          const deck = payload.new as Deck;
+          setLocalDecks((prev) => {
+            if (prev.some((d) => d.id === deck.id)) return prev;
+            return [deck, ...prev];
+          });
+          setToast(`New deck linked: ${deck.name}`);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 6000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   function setStatus(deckId: string, status: "approved" | "rejected") {
     setError(null);
@@ -70,6 +104,12 @@ export default function ReviewDecks({
       <div className="border-b border-black/5 px-5 py-4 text-sm text-zinc-600 dark:border-white/10 dark:text-zinc-400">
         Pending: <span className="font-semibold">{localDecks.length}</span>
       </div>
+
+      {toast ? (
+        <div className="mx-5 mt-5 rounded-xl border border-emerald-500/20 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-500/25 dark:bg-emerald-950/40 dark:text-emerald-200">
+          {toast}
+        </div>
+      ) : null}
 
       {error ? (
         <div className="m-5 rounded-xl border border-red-500/20 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-500/25 dark:bg-red-950/40 dark:text-red-200">
