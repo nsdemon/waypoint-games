@@ -20,13 +20,11 @@ export default async function AdminDecksPage() {
 
   const { data: decks, error } = await supabase
     .from("decks")
-    .select("id,name,format,status,storage_path,created_at,owner_id,review_notes")
+    .select(
+      "id,name,format,status,storage_path,created_at,owner_id,review_notes,owner:profiles(display_name)",
+    )
     .eq("status", "pending")
     .order("created_at", { ascending: true });
-
-  const { data: owners } = await supabase
-    .from("profiles")
-    .select("id,display_name");
 
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
@@ -57,7 +55,6 @@ export default async function AdminDecksPage() {
         <ReviewDecks
           adminId={userData.user.id}
           decks={decks ?? []}
-          owners={owners ?? []}
         />
       </div>
     </div>

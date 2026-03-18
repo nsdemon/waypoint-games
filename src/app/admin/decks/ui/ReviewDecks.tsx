@@ -12,30 +12,21 @@ type Deck = {
   storage_path: string;
   created_at: string;
   review_notes: string | null;
+  owner?: { display_name: string } | null;
 };
-
-type Owner = { id: string; display_name: string };
 
 export default function ReviewDecks({
   adminId,
   decks,
-  owners,
 }: {
   adminId: string;
   decks: Deck[];
-  owners: Owner[];
 }) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [localDecks, setLocalDecks] = useState<Deck[]>(decks);
   const [toast, setToast] = useState<string | null>(null);
-
-  const ownerName = useMemo(() => {
-    const map = new Map<string, string>();
-    owners.forEach((o) => map.set(o.id, o.display_name));
-    return map;
-  }, [owners]);
 
   useEffect(() => {
     const channel = supabase
@@ -88,15 +79,7 @@ export default function ReviewDecks({
 
   async function openDownload(path: string) {
     setError(null);
-    if (/^https?:\/\//i.test(path)) {
-      window.open(path, "_blank", "noopener,noreferrer");
-      return;
-    }
-    const { data, error: signedError } = await supabase.storage
-      .from("decklists")
-      .createSignedUrl(path, 60);
-    if (signedError) return setError(signedError.message);
-    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    window.open(path, "_blank", "noopener,noreferrer");
   }
 
   return (
@@ -126,9 +109,17 @@ export default function ReviewDecks({
                 <div className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">
                   {d.format} • Uploaded by{" "}
                   <span className="font-medium text-zinc-800 dark:text-zinc-200">
-                    {ownerName.get(d.owner_id) ?? d.owner_id}
+                    {d.owner?.display_name ?? d.owner_id}
                   </span>
                 </div>
+                <a
+                  href={d.storage_path}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex text-sm font-medium text-zinc-700 underline underline-offset-4 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-white"
+                >
+                  {d.storage_path}
+                </a>
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
