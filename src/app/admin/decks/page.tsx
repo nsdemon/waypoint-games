@@ -21,7 +21,7 @@ export default async function AdminDecksPage() {
   const { data: decks, error } = await supabase
     .from("decks")
     .select(
-      "id,name,format,status,storage_path,created_at,owner_id,review_notes,owner:profiles(display_name)",
+      "id,name,format,status,storage_path,created_at,owner_id,review_notes,owner:profiles!decks_owner_id_fkey(display_name)",
     )
     .eq("status", "pending")
     .order("created_at", { ascending: true });
