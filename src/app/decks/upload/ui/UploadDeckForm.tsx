@@ -20,17 +20,27 @@ export default function UploadDeckForm({ userId }: { userId: string }) {
     if (!name) return setError("Deck name is required.");
     if (!(file instanceof File)) return setError("Deck file is required.");
     if (file.size === 0) return setError("Deck file is empty.");
-    if (file.size > 1024 * 1024) return setError("Deck file is too large (max 1MB).");
+    if (file.size > 1024 * 1024)
+      return setError("Deck file is too large (max 1MB).");
 
     startTransition(async () => {
-      const ext = (file.name.split(".").pop() || "txt").toLowerCase();
+      const ext = (file.name.split(".").pop() || "").toLowerCase();
+      if (ext !== "txt" && ext !== "csv") {
+        return setError("Unsupported file type. Please upload a .txt or .csv.");
+      }
+      const contentType =
+        ext === "csv"
+          ? "text/csv"
+          : file.type && file.type !== "application/octet-stream"
+            ? file.type
+            : "text/plain";
       const path = `${userId}/${crypto.randomUUID()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from("decklists")
         .upload(path, file, {
           upsert: false,
-          contentType: file.type || "text/plain",
+          contentType,
         });
       if (uploadError) return setError(uploadError.message);
 
@@ -75,12 +85,13 @@ export default function UploadDeckForm({ userId }: { userId: string }) {
           <input
             name="deckfile"
             type="file"
-            accept=".txt,.csv,.dec,.dek,.json"
+            accept=".txt,.csv,text/plain,text/csv"
             required
             className="block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-zinc-900 hover:file:bg-zinc-200 dark:file:bg-zinc-900 dark:file:text-zinc-50 dark:hover:file:bg-zinc-800"
           />
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
-            You’ll need a Supabase Storage bucket named <code>decklists</code>.
+            Accepted: <code>.txt</code> and <code>.csv</code>. You’ll need a
+            Supabase Storage bucket named <code>decklists</code>.
           </span>
         </label>
 
