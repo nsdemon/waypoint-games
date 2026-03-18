@@ -67,6 +67,15 @@ create table if not exists public.matches (
   created_at timestamptz not null default now()
 );
 
+-- Homepage announcement banner (single row, id=1)
+create table if not exists public.announcements (
+  id int primary key,
+  winner_name text,
+  event_name text,
+  updated_by uuid references public.profiles (id),
+  updated_at timestamptz not null default now()
+);
+
 -- Supports 2+ players; exactly one winner is typical.
 create table if not exists public.match_players (
   match_id uuid not null references public.matches (id) on delete cascade,
@@ -114,6 +123,7 @@ alter table public.stores enable row level security;
 alter table public.decks enable row level security;
 alter table public.matches enable row level security;
 alter table public.match_players enable row level security;
+alter table public.announcements enable row level security;
 
 -- Profiles policies
 create policy "profiles are readable" on public.profiles
@@ -182,6 +192,14 @@ with check (
   )
 );
 
+-- Announcements: readable by all; only admins can write
+create policy "announcements readable" on public.announcements
+for select using (true);
+
+create policy "announcements admins write" on public.announcements
+for all using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin))
+with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin));
+
 -- Grants (fixes "permission denied for table ..." errors)
 grant usage on schema public to anon, authenticated;
 grant select on public.profiles to anon, authenticated;
@@ -189,10 +207,12 @@ grant select on public.stores to anon, authenticated;
 grant select on public.decks to anon, authenticated;
 grant select on public.matches to anon, authenticated;
 grant select on public.match_players to anon, authenticated;
+grant select on public.announcements to anon, authenticated;
 
 grant insert, update, delete on public.profiles to authenticated;
 grant insert, update, delete on public.stores to authenticated;
 grant insert, update, delete on public.decks to authenticated;
 grant insert, update, delete on public.matches to authenticated;
 grant insert, update, delete on public.match_players to authenticated;
+grant insert, update, delete on public.announcements to authenticated;
 

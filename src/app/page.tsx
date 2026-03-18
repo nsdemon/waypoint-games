@@ -1,10 +1,34 @@
-export default function Home() {
+import { getSupabasePublicEnv } from "@/lib/supabase/env";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  let winnerName: string | null = null;
+  let eventName: string | null = null;
+
+  if (getSupabasePublicEnv()) {
+    try {
+      const supabase = await createSupabaseServerClient();
+      const { data } = await supabase
+        .from("announcements")
+        .select("winner_name,event_name")
+        .eq("id", 1)
+        .maybeSingle();
+      winnerName = data?.winner_name ?? null;
+      eventName = data?.event_name ?? null;
+    } catch {
+      // ignore
+    }
+  }
+
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
       <div className="mx-auto flex max-w-5xl flex-col gap-10 px-6 py-12">
         <header className="flex flex-col gap-3">
           <h1 className="text-3xl font-semibold tracking-tight">
-            Baton Rouge MTG Tracker
+            Congratulations {winnerName || "player"} for winning{" "}
+            {eventName || "the event"}.
           </h1>
           <p className="max-w-2xl text-zinc-600 dark:text-zinc-400">
             Accounts, decklist uploads for admin review, match reporting by store
