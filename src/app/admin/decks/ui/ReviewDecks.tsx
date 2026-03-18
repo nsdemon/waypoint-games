@@ -54,6 +54,10 @@ export default function ReviewDecks({
 
   async function openDownload(path: string) {
     setError(null);
+    if (/^https?:\/\//i.test(path)) {
+      window.open(path, "_blank", "noopener,noreferrer");
+      return;
+    }
     const { data, error: signedError } = await supabase.storage
       .from("decklists")
       .createSignedUrl(path, 60);
