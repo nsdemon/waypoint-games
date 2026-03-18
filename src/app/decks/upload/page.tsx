@@ -1,8 +1,11 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import UploadDeckForm from "./ui/UploadDeckForm";
+import { getSupabasePublicEnv } from "@/lib/supabase/env";
+import SupabaseNotConfigured from "@/app/_components/SupabaseNotConfigured";
 
 export default async function UploadDeckPage() {
+  if (!getSupabasePublicEnv()) return <SupabaseNotConfigured />;
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase.auth.getUser();
   if (!data.user) redirect("/login");

@@ -1,6 +1,9 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getSupabasePublicEnv } from "@/lib/supabase/env";
+import SupabaseNotConfigured from "@/app/_components/SupabaseNotConfigured";
 
 export default async function LeaderboardPage() {
+  if (!getSupabasePublicEnv()) return <SupabaseNotConfigured />;
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("leaderboard_wins")
