@@ -182,3 +182,17 @@ with check (
   )
 );
 
+-- Grants (fixes "permission denied for table ..." errors)
+grant usage on schema public to anon, authenticated;
+grant select on public.profiles to anon, authenticated;
+grant select on public.stores to anon, authenticated;
+grant select on public.decks to anon, authenticated;
+grant select on public.matches to anon, authenticated;
+grant select on public.match_players to anon, authenticated;
+
+grant insert, update, delete on public.profiles to authenticated;
+grant insert, update, delete on public.stores to authenticated;
+grant insert, update, delete on public.decks to authenticated;
+grant insert, update, delete on public.matches to authenticated;
+grant insert, update, delete on public.match_players to authenticated;
+
