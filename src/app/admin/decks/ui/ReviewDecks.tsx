@@ -12,7 +12,7 @@ type Deck = {
   storage_path: string;
   created_at: string;
   review_notes: string | null;
-  owner?: { display_name: string } | null;
+  owner?: { display_name: string }[] | null;
 };
 
 export default function ReviewDecks({
@@ -109,7 +109,7 @@ export default function ReviewDecks({
                 <div className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">
                   {d.format} • Uploaded by{" "}
                   <span className="font-medium text-zinc-800 dark:text-zinc-200">
-                    {d.owner?.display_name ?? d.owner_id}
+                    {d.owner?.[0]?.display_name ?? d.owner_id}
                   </span>
                 </div>
                 <a
